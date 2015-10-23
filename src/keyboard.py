@@ -9,6 +9,7 @@ from somewhere import KeyboardService
 class Keyboard:
 
     def __init__(self, service_name):
+        rospy.init_node(service_name)
         self.service_name = service_name
         rospy.wait_for_service(service_name)
         try:
