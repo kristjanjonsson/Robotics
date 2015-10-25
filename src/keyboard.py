@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-
-# TODO: Generate service.
-from somewhere import KeyboardService
+from A53070542_assignment_4.srv import KeyboardService
 
 
 class Keyboard:
@@ -18,23 +16,20 @@ class Keyboard:
             print 'Service call failed: {}'.format(str(e))
 
     def change_mode(self, mode):
-        mode = mode.lower()
-        if mode not in 'rfm':
-            raise ValueError('Incorrect mode.')
-
         try:
-            response = self.change_mode_handle(mode)
+            response = self.change_mode_handle(mode.lower())
         except rospy.ServiceException as e:
             print 'Service call failed: {}'.format(str(e))
 
-        if response.success:
+        if not response.error:
             print('Mode changed to: {0}'.format(mode))
         else:
-            raise ValueError('Failed to change to mode: {0}'.format(mode))
+            raise ValueError('Failed to change to mode: {0}\n{1}'.format(mode, response.error))
 
 
 input_msg = '''
-Enter r for raw video feed.
+Enter:
+r for raw video feed.
 f for Farneback.
 m for MOG2.
 '''

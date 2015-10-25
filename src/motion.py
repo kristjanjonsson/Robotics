@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 import rospy
-
-# TODO: Generate service.
-from somewhere import KeyboardService
+from A53070542_assignment_4.srv import KeyboardService
 
 
 def printer(request):
-    print request.msg
-    return True,
+    if request.mode not in 'rfm':
+        return 'Invalid mode {0}'.format(request.mode)
+    print request.mode
+    return ''
 
 
 class Motion:
