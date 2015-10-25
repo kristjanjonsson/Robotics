@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+from rospy import ServiceException
 from A53070542_assignment_4.srv import KeyboardService
 
 
@@ -8,23 +9,16 @@ class Keyboard:
 
     def __init__(self, service_name):
         rospy.init_node(service_name)
-        self.service_name = service_name
         rospy.wait_for_service(service_name)
-        try:
-            self.change_mode_handle = rospy.ServiceProxy(service_name, KeyboardService)
-        except rospy.ServiceException as e:
-            print 'Service call failed: {}'.format(str(e))
+        self.change_mode_handle = rospy.ServiceProxy(service_name, KeyboardService)
 
     def change_mode(self, mode):
-        try:
-            response = self.change_mode_handle(mode.lower())
-        except rospy.ServiceException as e:
-            print 'Service call failed: {}'.format(str(e))
+        response = self.change_mode_handle(mode.lower())
 
         if not response.error:
             print('Mode changed to: {0}'.format(mode))
         else:
-            raise ValueError('Failed to change to mode: {0}\n{1}'.format(mode, response.error))
+            raise ServiceException(response.error)
 
 
 input_msg = '''
@@ -41,5 +35,5 @@ if __name__ == "__main__":
         try:
             mode = raw_input(input_msg)
             keyboard.change_mode(mode)
-        except Exception as e:
+        except ServiceException as e:
             print(e)
