@@ -37,7 +37,7 @@ m for MOG2.
 
 if __name__ == "__main__":
     keyboard = Keyboard('motion_mode_keyboard')
-    while True:
+    while not rospy.is_shutdown():
         try:
             mode = raw_input(input_msg)
             keyboard.change_mode(mode)
