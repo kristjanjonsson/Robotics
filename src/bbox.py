@@ -1,10 +1,10 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 
-import sys
 import numpy as np
 import cv2
 
 
+# Kernels for dilate erode filters.
 kernel15 = np.ones((15, 15), np.uint8)
 kernel_elliptic_7 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
 kernel_elliptic_15 = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
@@ -25,7 +25,7 @@ class BBox:
         '''Returns: List of the corner points of motion bounding boxes.
         Returns the 3 largest if that many.'''
         contours = cv2.findContours(self.binary_image().astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        area_box = ((cv2.contourArea(contour), cv2.boundingRect(contour)) for contour in contours[1])
+        area_box = ((cv2.contourArea(contour), cv2.boundingRect(contour)) for contour in contours[0])
         area_box = [(area, box) for (area, box) in area_box if area > area_threshold]
         area_box.sort(reverse=True)
         return [((x, y), (x+w, y+h)) for _, (x, y, w, h) in area_box[:3]]
@@ -59,20 +59,19 @@ class OpticalFlow(BBox):
     def flow_magnitude(self, prev_frame, frame):
         '''Calculates the magnitude of the Farneback Optical flow vectors.
         Both frames are greyscale.'''
-        flow = cv2.calcOpticalFlowFarneback(prev_frame, frame, None,
+        flow = cv2.calcOpticalFlowFarneback(prev_frame, frame,
                                             pyr_scale=0.5,
                                             levels=3,
-                                            winsize=17,
+                                            winsize=15,
                                             iterations=2,
-                                            poly_n=7,
-                                            poly_sigma=1.5,
+                                            poly_n=5,
+                                            poly_sigma=1.1,
                                             flags=0)
         return cv2.magnitude(flow[..., 0], flow[..., 1])
 
-    def to_binary(self, flow_magnitude, threshold=2.7, kernel=kernel15):
+    def to_binary(self, dest, threshold=2.7, kernel=kernel15):
         '''Applies a threshold and does erosion and dilation on a grey scale image.'''
-        dest = np.zeros_like(flow_magnitude)
-        cv2.threshold(flow_magnitude, threshold, 1, 0, dst=dest)
+        cv2.threshold(dest, threshold, 1, 0, dst=dest)
         cv2.morphologyEx(dest, cv2.MORPH_OPEN, kernel, dst=dest)
         cv2.dilate(dest, kernel, dst=dest, iterations=1)
         return dest
@@ -81,11 +80,11 @@ class OpticalFlow(BBox):
 class MOG2(BBox):
 
     def __init__(self):
-        self.mog2 = cv2.createBackgroundSubtractorMOG2(history=150)
+        self.mog2 = cv2.BackgroundSubtractorMOG2(history=150, varThreshold=16, bShadowDetection=False)
 
     def apply(self, frame):
         '''Applies mog2 backround subtraction algorithm on frame.'''
-        fgmask = self.mog2.apply(frame)
+        fgmask = self.mog2.apply(frame, learningRate=0.01)
         cv2.morphologyEx(fgmask, cv2.MORPH_CLOSE, kernel_elliptic_7, dst=fgmask)
         cv2.morphologyEx(fgmask, cv2.MORPH_OPEN, kernel_elliptic_15, dst=fgmask)
         self.binary_img = fgmask
@@ -133,6 +132,7 @@ def main(mode, video_fname=None):
         cv2.waitKey(1)
 
 if __name__ == '__main__':
+    import sys
     mode = sys.argv[1] if len(sys.argv) > 1 else 'f'
     source = sys.argv[2] if len(sys.argv) > 2 else 0
     main(mode, source)
