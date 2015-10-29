@@ -1,4 +1,9 @@
 <launch>
+  <env name = "GSCAM_CONFIG"  value = "v4l2src device=/dev/video0 !
+       video/x-raw-rgb,framerate=25/1 ! ffmpegcolorspace"  />
+  <node pkg = "gscam"  type = "gscam"  name = "web_cam" >
+      <param name = "camera_name"  value = "web_cam"  />
+  </node>
   <node pkg="A53070542_assignment_4" name="MotionNode" type="motion.py" />
-  <!-- <node pkg="A53070542_assignment_4" name="KeyboardNode" type="keyboard.py" /> -->
+  <node pkg="A53070542_assignment_4" name="KeyboardNode" type="keyboard.py" output="screen" />
 </launch>

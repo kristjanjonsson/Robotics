@@ -13,7 +13,7 @@ class Motion:
     def __init__(self, node_name):
         rospy.init_node(node_name)
         self.bridge = CvBridge()
-        self.pub = rospy.Publisher('/camera/visible/image', Image, queue_size=10)
+        self.pub = rospy.Publisher('camera/visible/image', Image, queue_size=5)
         rospy.Subscriber("camera/image_raw", Image, self.imageCallback)
         s = rospy.Service('motion_mode_keyboard', KeyboardService, self.change_mode)
         self.motion_detector = None
